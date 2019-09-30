@@ -37,6 +37,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'unit/shady-events.html',
       'unit/shady-content.html',
       'unit/shady-dynamic.html',
+      'unit/shady-dynamic.html?syncInitialRender=true',
       'unit/styling-scoped.html',
       'unit/styling-cross-scope-var.html',
       'unit/styling-cross-scope-apply.html',
@@ -56,6 +57,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'unit/attributes.html',
       'unit/async.html',
       'unit/behaviors.html',
+      'unit/behaviors.html?legacyOptimizations=true',
       'unit/polymer.element.html',
       'unit/polymer.properties-mixin.html',
       'unit/polymer.properties-mixin-with-property-accessors.html',
@@ -69,6 +71,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'unit/dom-bind.html',
       'unit/array-selector.html',
       'unit/polymer-dom.html',
+      'unit/polymer-dom-nopatch.html',
       'unit/polymer-dom-observeNodes.html',
       'unit/flattened-nodes-observer.html',
       // TODO: substitute for equivalent es6 import tests
@@ -83,13 +86,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'unit/disable-upgrade.html',
       'unit/shady-unscoped-style.html',
       'unit/html-tag.html',
-      'unit/legacy-data.html'
+      'unit/legacy-data.html',
       // 'unit/multi-style.html'
+      'unit/class-properties.html',
+      'unit/styling-scoped-nopatch.html'
     ];
 
     function combinations(suites, flags) {
       return flags.map((f) => {
-        return f ? suites.map(s => `${s}?${f}`) : suites;
+        return f ? suites.map(s => `${s}${s.match(/\?/) ? '&' : '?'}${f}`) : suites;
       }).reduce((arr, s) => arr.concat(s), []);
     }
 

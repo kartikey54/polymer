@@ -10,7 +10,6 @@ Beyond GitHub, we try to have a variety of different lines of communication open
 
 * [Blog](https://blog.polymer-project.org/)
 * [Twitter](https://twitter.com/polymer)
-* [Google+ Community](https://plus.sandbox.google.com/u/0/communities/115626364525706131031?cfem=1)
 * [Mailing list](https://groups.google.com/forum/#!forum/polymer-dev)
 * [Slack channel](https://bit.ly/polymerslack)
 
@@ -40,7 +39,7 @@ The Polymer team heavily uses (and loves!) GitHub for all of our software manage
 
 If you find an issue, please do file it on the repository. The [Polymer/polymer issues](https://github.com/polymer/polymer/issues) should be used only for issues on the Polymer library itself - bugs somewhere in the core codebase.
 
-For issues with elements the team maintains, please file directly on the element's repository. If you're not sure if a bug stems from the element or the library, air toward filing it on the element and we'll move the issue if necessary.
+For issues with elements the team maintains, please file directly on the element's repository. If you're not sure if a bug stems from the element or the library, err toward filing it on the element and we'll move the issue if necessary.
 
 Please file issues using the issue template provided, filling out as many fields as possible. We love examples for addressing issues - issues with a jsBin, Plunkr, jsFiddle, or glitch.me repro will be much easier for us to work on quickly. You can start with [this jsbin](http://jsbin.com/luhaxab/edit) which sets up the basics to demonstrate a Polymer element.  If you need your repro to run in IE11, you can start from [this glitch](https://glitch.com/edit/#!/polymer-repro?path=my-element.html:2:0), which serves the source via polyserve for automatic transpilation, although you must sign up for a glitch.me account to ensure your code persists for more than 5 days (note the glitch.me _editing environment_ is not compatible with IE11, however the "live" view link of the running code should work).
 

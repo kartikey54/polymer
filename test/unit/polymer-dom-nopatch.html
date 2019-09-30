@@ -11,6 +11,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="utf-8">
+  <script>
+    ShadyDOM = {force: true, noPatch: true};
+  </script>
   <script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
   <script src="wct-browser-config.js"></script>
   <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
@@ -30,17 +33,6 @@ Polymer({
 </script>
   </dom-module>
 
-  <dom-module id="x-scoped-node">
-    <template>
-      <div><div id="first">first</div></div>
-    </template>
-    <script type="module">
-import { Polymer } from '../../polymer-legacy.js';
-Polymer({
-  is: 'x-scoped-node'
-});
-</script>
-
   <dom-module id="x-container-slot">
     <template>
       <x-slot id="container"><div id="first">first</div><slot id="slot"></slot><div id="last">last</div></x-slot>
@@ -55,7 +47,9 @@ Polymer({
 
   <dom-module id="x-event-scoped">
     <template>
-      <div id="scoped"></div>
+      <div id="container">
+        <div id="scoped"></div>
+      </div>
     </template>
     <script type="module">
 import { Polymer } from '../../polymer-legacy.js';
@@ -78,7 +72,7 @@ Polymer({
   is: 'x-focusable-in-shadow'
 });
 </script>
-</dom-module>
+  </dom-module>
 
 <dom-module id="x-class-bindings">
 <template>
@@ -137,7 +131,7 @@ suite('extended dom api', function() {
   test('getEffectiveChildNodes', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -152,7 +146,7 @@ suite('extended dom api', function() {
   test('queryDistributedElements', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -172,7 +166,7 @@ suite('distribution', function() {
   test('getDistributedNodes', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -184,7 +178,7 @@ suite('distribution', function() {
   test('getDestinationInsertionPoints', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -197,7 +191,11 @@ suite('distribution', function() {
 
 suite('events', function() {
 
-  test('localTarget, rootTarget, path', function(done) {
+  test('localTarget, rootTarget, path', function() {
+    // skip if noPatch is not available
+    if (!window.ShadyDOM.wrap) {
+      this.skip();
+    }
     var el = fixture('scoped');
     el.addEventListener('composed', function(e) {
       assert.equal(dom(e).rootTarget, el.$.scoped);
@@ -206,24 +204,43 @@ suite('events', function() {
       let p = el.$.scoped;
       while (p) {
         nodes.push(p);
-        p = p.parentNode || p.host;
+        p = dom(p).parentNode || ShadyDOM.wrap(p).host;
       }
       nodes.push(window);
-      assert.deepEqual(Array.from(dom(e).path), nodes);
-      done();
+      const path = dom(e).path;
+      assert.deepEqual(path, nodes);
     });
+    ShadyDOM.flush();
+    el.fireComposed();
+  });
+
+  test('localTarget when target node and event listener node are distinct', function() {
+    // skip if noPatch is not available
+    if (!window.ShadyDOM.wrap) {
+      this.skip();
+    }
+    var el = fixture('scoped');
+    el.$.container.addEventListener('composed', function(e) {
+      assert.equal(dom(e).rootTarget, el.$.scoped);
+      assert.equal(dom(e).localTarget, el.$.scoped);
+    });
+    ShadyDOM.flush();
     el.fireComposed();
   });
 
 });
 
 suite('activeElement getter', function() {
-  test('Retrieves `_activeElement` (ShadyDOM) or `activeElement`.', function() {
+  test('Retrieves `activeElement`', function() {
+    // skip if noPatch is not available
+    if (!window.ShadyDOM.wrap) {
+      this.skip();
+    }
     var focusableInShadow = fixture('focusableInShadow');
-    focusableInShadow.$.focusable.focus();
-    var rootNode = focusableInShadow.getRootNode();
+    ShadyDOM.wrap(focusableInShadow.$.focusable).focus();
+    var rootNode = ShadyDOM.wrap(focusableInShadow).getRootNode();
     assert.equal(dom(rootNode).activeElement, focusableInShadow);
-    assert.equal(dom(focusableInShadow.shadowRoot).activeElement, focusableInShadow.$.focusable);
+    assert.equal(dom(dom(focusableInShadow).shadowRoot).activeElement, focusableInShadow.$.focusable);
   });
 });
 
@@ -231,9 +248,9 @@ suite('legacy api', function() {
   test('getEffectiveChildNodes', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    var t = document.createTextNode('');
-    el.appendChild(div);
-    el.appendChild(t);
+    var t = document.createTextNode('yo');
+    dom(el).appendChild(div);
+    dom(el).appendChild(t);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -246,7 +263,7 @@ suite('legacy api', function() {
   test('getEffectiveChildren', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -260,8 +277,8 @@ suite('legacy api', function() {
     var el = fixture('slot');
     var t1 = document.createTextNode('a');
     var t2 = document.createTextNode('b');
-    el.appendChild(t1);
-    el.appendChild(t2);
+    dom(el).appendChild(t1);
+    dom(el).appendChild(t2);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -274,9 +291,9 @@ suite('legacy api', function() {
     var div1 = document.createElement('div');
     var t = document.createTextNode('');
     var div2 = document.createElement('div');
-    el.appendChild(div1);
-    el.appendChild(t);
-    el.appendChild(div2);
+    dom(el).appendChild(div1);
+    dom(el).appendChild(t);
+    dom(el).appendChild(div2);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -291,9 +308,9 @@ suite('legacy api', function() {
     var div1 = document.createElement('div');
     var t = document.createTextNode('');
     var div2 = document.createElement('div');
-    el.appendChild(div1);
-    el.appendChild(t);
-    el.appendChild(div2);
+    dom(el).appendChild(div1);
+    dom(el).appendChild(t);
+    dom(el).appendChild(div2);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -306,7 +323,7 @@ suite('legacy api', function() {
   test('queryDistributedElements', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -321,7 +338,7 @@ suite('legacy api', function() {
   test('queryEffectiveChildren', function() {
     var el = fixture('slot');
     var div = document.createElement('div');
-    el.appendChild(div);
+    dom(el).appendChild(div);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -337,8 +354,8 @@ suite('legacy api', function() {
     var el = fixture('slot');
     var div1 = document.createElement('div');
     var div2 = document.createElement('div');
-    el.appendChild(div1);
-    el.appendChild(div2);
+    dom(el).appendChild(div1);
+    dom(el).appendChild(div2);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -353,7 +370,7 @@ suite('legacy api', function() {
   test('isLightDescendant', function() {
     var el = fixture('slot');
     var div1 = document.createElement('div');
-    el.appendChild(div1);
+    dom(el).appendChild(div1);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -364,7 +381,7 @@ suite('legacy api', function() {
   test('isLocalDescendant', function() {
     var el = fixture('slot');
     var div1 = document.createElement('div');
-    el.appendChild(div1);
+    dom(el).appendChild(div1);
     if (window.ShadyDOM) {
       ShadyDOM.flush();
     }
@@ -523,35 +540,33 @@ suite('forwarded native api', function() {
   });
 
   test('className', function() {
-    const el = document.createElement('x-scoped-node');
-    document.body.appendChild(el);
-    const testEl = el.$.first;
-    const testElDom = dom(testEl);
-    testElDom.className = 'foo';
-    assert.isTrue(testEl.classList.contains('foo'));
-    if (window['ShadyDOM']) {
-      assert.isTrue(testEl.classList.contains('style-scope'));
-    }
-    document.body.removeChild(el);
+    dom(el).className = 'foo';
+    assert.isTrue(el.classList.contains('foo'));
   });
 
-  test('class bindings', function() {
+  test('class bindings work and remained scoped', function() {
     const el = document.createElement('x-class-bindings');
     document.body.appendChild(el);
     assert.equal(getComputedStyle(el.$.class)['border-top-width'], '0px');
     assert.equal(getComputedStyle(el.$.class)['padding-top'], '4px');
+    assert.isTrue(el.$.class.classList.contains('style-scope'));
     assert.equal(getComputedStyle(el.$.className)['border-top-width'], '0px');
     assert.equal(getComputedStyle(el.$.className)['padding-top'], '4px');
+    assert.isTrue(el.$.className.classList.contains('style-scope'));
     el.clazz = 'a';
     assert.equal(getComputedStyle(el.$.class)['border-top-width'], '2px');
     assert.equal(getComputedStyle(el.$.class)['padding-top'], '4px');
+    assert.isTrue(el.$.class.classList.contains('style-scope'));
     assert.equal(getComputedStyle(el.$.className)['border-top-width'], '2px');
     assert.equal(getComputedStyle(el.$.className)['padding-top'], '4px');
+    assert.isTrue(el.$.className.classList.contains('style-scope'));
     el.clazz = 'aa';
     assert.equal(getComputedStyle(el.$.class)['border-top-width'], '12px');
     assert.equal(getComputedStyle(el.$.class)['padding-top'], '4px');
+    assert.isTrue(el.$.class.classList.contains('style-scope'));
     assert.equal(getComputedStyle(el.$.className)['border-top-width'], '12px');
     assert.equal(getComputedStyle(el.$.className)['padding-top'], '4px');
+    assert.isTrue(el.$.className.classList.contains('style-scope'));
     document.body.removeChild(el);
   });
 
